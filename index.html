@@ -8,7 +8,37 @@
     <h1>
         <a id="userId">Monster Mayhem</a>
     </h1>
-  
+    <h2>Game Mechanics:</h2>
+    <h3>
+      <ul>
+        <li>Each round, the player with the fewest monsters on the grid gets a turn first.</li>
+        <li>If there is a tie, then it is randomly decided from among those with the least monsters.</li>
+        <li>On a players turn, they may play either a vampire, a werewolf or a ghost anywhere on their edge of the grid. </li>
+        <li>They may not move that monster this turn. They may also move any other monsters that they have. </li>
+        <li>A monster can move any number of squares horizontally or vertically, or up to two squares diagonally. </li>
+        <li>They can move over their own player’s monsters, but cannot move over other player’s monsters.</li>
+    </h3>
+
+    <h2>Rules:</h2>
+    <h3>
+      <ul>
+        <li>If there’s a vampire and a werewolf, the werewolf is removed</li>
+        <li>If there’s a werewolf and a ghost, the ghost is removed</li>
+        <li>If there’s a ghost and a vampire, the vampire is removed</li>
+        <li>If there’s two of the same kind of monster, both are removed</li>
+      </ul>
+    </h3>
+
+    <button id="btn-start">Start Game</button>
+
+    <h3 id="turn" style='text-align:center'>Monster Mayhem</h3>
+    <button id="btn-turn" style='visibility:hidden'>End turn</button>
+
+    <h3 id="redPlayer"      style='text-align:center; color:#FF0000'>Player red</h3>
+    <h3 id="yellowPlayer"   style='text-align:center; color:#AAAA00'>Player yellow</h3>
+    <h3 id="greenPlayer"    style='text-align:center; color:#00AA00'>Player green</h3>
+    <h3 id="bluePlayer"     style='text-align:center; color:#0000FF'>Player blue</h3>
+
     <div class="chessBoard">
       <!-- Add the pawn div element -->
       <div class="square"></div>
