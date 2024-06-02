@@ -1,12 +1,11 @@
 
-
+//Controls the pieces' positions
 let boardSquaresArray = [];
-let whoseTurn = -1;  // 0: red; 1: yellow; 2: green; 3: blue
 
-const boardSquares = document.getElementsByClassName("square");
-const pieces = document.getElementsByClassName("piece");
-const piecesImages = document.getElementsByTagName("img");
+// 0: red; 1: yellow; 2: green; 3: blue
+let whoseTurn = -1;
 
+//Stores the current game
 const players = {
     red: {monsters: 0, werewolf: 0, vampire: 0, ghost: 0},
     yellow: {monsters: 0, werewolf: 0, vampire: 0, ghost: 0},
@@ -14,35 +13,102 @@ const players = {
     blue: {monsters: 0, werewolf: 0, vampire: 0, ghost: 0},
 }
 
-
+//HTML page references
+const boardSquares = document.getElementsByClassName("square");
+const pieces = document.getElementsByClassName("piece");
+const piecesImages = document.getElementsByTagName("img");
+let btnLogin = document.getElementById("btn-login");
 let btnStart = document.getElementById("btn-start");
 let btnTurn = document.getElementById("btn-turn");
-
 let turn = document.getElementById("turn");
 let redPlayer = document.getElementById("redPlayer");
 let yellowPlayer = document.getElementById("yellowPlayer");
 let greenPlayer = document.getElementById("greenPlayer");
 let bluePlayer = document.getElementById("bluePlayer");
+let myUser = document.getElementById("userId");
+let userInfo = document.getElementById("userInfo");
 
+//Login info storage
+let userLS = {noOfLogins: 0, red: 0, yellow: 0, green: 0, blue: 0};
+let user;
 
+//Login function
+function login() {
+    userLS.noOfLogins = 0;
+    userLS.red = 0;
+    userLS.yellow = 0;
+    userLS.green = 0;
+    userLS.blue = 0;
 
+    do{
+        user = prompt("Enter your username");
+    } while (user === '');
 
+    //Else the user pressed Cancel
+    if (user) {
+        //Check if the user did log in
+        if (!localStorage.getItem(user)){
+          localStorage.setItem(user, JSON.stringify(userLS));
+          // alert("if");
+        }
 
+        userLS = JSON.parse(localStorage.getItem(user));
+        userLS.noOfLogins++;
+        localStorage.setItem(user, JSON.stringify(userLS));
 
+        userInfo.textContent = `Number of logins: ${userLS.noOfLogins}
+        Red's victories: ${userLS.red}
+        Yellow's victories: ${userLS.yellow}
+        Green's victories: ${userLS.green}
+        Blue's victories: ${userLS.blue}`
 
+        btnLogin.textContent = "Logout";
+        if(userLS.noOfLogins == 1)
+          myUser.textContent = `Logged as ${user}`;
+        else
+          myUser.textContent = `Welcome back, ${user}!`;
+    }
+}
 
+//Logout function
+function logout() {
+  myUser.textContent = "Please login.";
+  btnLogin.textContent = "Login";
+  userInfo.textContent = "";
+  location.reload();
+}
+
+//When the user clicks on Loggin Button selection
+btnLogin.onclick = () => {
+  if(btnLogin.textContent === "Login")
+      login();
+  else
+      logout();
+}
+
+//When the user clicks on Start Button selection
 btnStart.onclick = () => {
     if (btnStart.textContent == "Start Game") {
+      if( myUser.textContent == "Please login."){
+        alert("You must be logged in to play.");
+      }
+      else{
         whoseTurn = parseInt(Math.random() * 4);
         countMonsters();
         updateGame();
         btnStart.textContent = "End Game";
         btnTurn.style.visibility = "visible";
+      }
+
     }
 
-    else location.reload();
+    else {
+      alert("You will be logged out.");
+      location.reload();
+    }
 }
 
+//End Turn Button implemented
 btnTurn.onclick = () => {
   let rand;
   do {
@@ -53,10 +119,12 @@ btnTurn.onclick = () => {
   updateTurn();
 }
 
+//Part where the player it'is changed after the turn ends
 function updateTurn() {
     turn.textContent = `${numToText(whoseTurn)}'s turn`;
 }
 
+//Monster amount displayed
 function countMonsters() {
     const boardSquares = document.getElementsByClassName("square");
 
@@ -73,11 +141,8 @@ function countMonsters() {
     }
 }
 
+//Amount of players and monsters left on the board
 function updateGame(){
-
-  // for (let i; i < 4; i++){
-  //   let color = numToText(i);
-  // }
 
     if (players.red.monsters)
         redPlayer.textContent = `Werewolves: ${players.red.werewolf},
@@ -99,6 +164,7 @@ function updateGame(){
       Vampires: ${players.blue.vampire}, Ghosts: ${players.blue.ghost}`;
     else bluePlayer.textContent = "Game over";
 
+    //In case of victory localStorage get updated
     if(players.red.monsters > 0 && players.yellow.monsters == 0 &&
       players.green.monsters == 0 && players.blue.monsters == 0) {
         alert("Red player won!");
@@ -131,6 +197,7 @@ function updateGame(){
     else updateTurn();
 }
 
+//Function responsible to store the pieces on the boarding space
 function fillBoardSquaresArray() {
   const boardSquares = document.getElementsByClassName("square");
   for (let i = 0; i < boardSquares.length; i++) {
@@ -160,6 +227,8 @@ function fillBoardSquaresArray() {
     boardSquaresArray.push(arrayElement);
   }
 }
+
+//The process below represents the target between original square, destination and result after the shock between players
 function updateBoardSquaresArray (currentSquareId, destinationSquareId, boardSquaresArray, whoLived) {
     /*
     whoLived == 0: strikerPiece
@@ -177,6 +246,9 @@ function updateBoardSquaresArray (currentSquareId, destinationSquareId, boardSqu
     let pieceType = currentSquare.pieceType;
     let pieceId= currentSquare.pieceId;
 
+    //When the  "wholived = 0" the attacker will get the square from the player attacked
+    //In case is "-1", both players lose and the destination square gets empty
+    //-1 it can also means the atacked survived so it doesn't change
     if(whoLived == 0){
       destinationSquareElement.pieceColor = pieceColor;
       destinationSquareElement.pieceType = pieceType;
@@ -188,6 +260,7 @@ function updateBoardSquaresArray (currentSquareId, destinationSquareId, boardSqu
       destinationSquareElement.pieceId = "blank";
     }
 
+    //The origin square will be always empty after movement
     currentSquare.pieceColor = "blank";
     currentSquare.pieceType = "blank";
     currentSquare.pieceId = "blank";
@@ -197,8 +270,8 @@ setupBoardSquares();
 setupPieces();
 fillBoardSquaresArray();
 
+//Code where is being difened the squares that are allowed to receive pieces
 function setupBoardSquares() {
-    // alert(boardSquares.length)
   for (let i = 0; i < boardSquares.length; i++) {
     boardSquares[i].addEventListener("dragover", allowDrop);
     boardSquares[i].addEventListener("drop", drop);
@@ -208,6 +281,8 @@ function setupBoardSquares() {
     square.id = column + row;
   }
 }
+
+//Allows that monsters can move through the board
 function setupPieces() {
   for (let i = 0; i < pieces.length; i++) {
     pieces[i].addEventListener("dragstart", drag);
@@ -218,9 +293,13 @@ function setupPieces() {
     piecesImages[i].setAttribute("draggable", false);
   }
 }
+
+//Prevents that not allowed moves being excecuted
 function allowDrop(ev) {
   ev.preventDefault();
 }
+
+//Function that controlls when a piece is dragged
 function drag(ev) {
   const piece = ev.target;
 
@@ -228,6 +307,7 @@ function drag(ev) {
   const pieceType =piece.classList[1];
   const pieceId = piece.id;
 
+  //Checks if the piece belongs to the specific colour turn
   if (numToText(whoseTurn) == pieceColor) {
     const startingSquareId = piece.parentNode.id;
     ev.dataTransfer.setData("text", pieceId + "|" + startingSquareId);
@@ -243,12 +323,21 @@ function drag(ev) {
     ev.dataTransfer.setData("application/json", legalSquaresJson);
   }
 
-  else alert(`It's ${numToText(whoseTurn)}'s turn!`);
+  //It speficy that the Start button needs to be selected
+  else if (btnStart.textContent == "Start Game")
+    alert("Press Start Button to play");
+
+  //It shows that the piece selected belongs to another colour
+  else
+    alert(`It's ${numToText(whoseTurn)}'s turn!`);
 
 }
 
+//Função que define o que acontece quando olta a peça em determinado local
 function drop(ev) {
   ev.preventDefault();
+
+  //Extract the info from where the monster comes from and where it goings
   let data = ev.dataTransfer.getData("text");
 
   let [pieceId, startingSquareId] = data.split("|");
@@ -262,14 +351,18 @@ function drop(ev) {
   const destinationSquare = ev.currentTarget;
   let   destinationSquareId = destinationSquare.id;
 
+  //It will verify if the destination square has a piece
   let squareContent = getPieceAtSquare(destinationSquareId,boardSquaresArray);
 
+  //Verify if the excecuted movement follow the rules
   if(!legalSquares.includes(destinationSquareId)) {
     alert(`Invalid move. \nValid moves for this monster: ${legalSquares}`);
     return;
   }
 
+  //The piece will be inserted on the destination square so it decides the clash
   destinationSquare.appendChild(piece);
+
   let children = destinationSquare.children;
   let whoLived = 0;
 
@@ -277,14 +370,13 @@ function drop(ev) {
     if(squareContent.pieceType == pieceType) {
       alert(`${squareContent.pieceType} x ${pieceType}: both dead!`);
 
+      //Remover as peças do quadrado
       for (let i = 0; i < children.length; i++) {
         if (!children[i].classList.contains('coordinate')) {
           destinationSquare.removeChild(children[i--]);
         }
       }
 
-      // destinationSquare.removeChild(children[0]);
-      // destinationSquare.removeChild(children[1]);
       players[squareContent.pieceColor]["monsters"]--;
       players[squareContent.pieceColor][squareContent.pieceType]--;
       players[pieceColor]["monsters"]--;
@@ -293,20 +385,26 @@ function drop(ev) {
       whoLived = -1;
     }
 
-    else {  //Different monsters
+    //Monsters
+    else {
 
       destinationSquare.appendChild(piece);
       let children = destinationSquare.children;
+
+      //Verifica a regra de combate para ver quem sobrevive
       if((squareContent.pieceType == "werewolf" && pieceType == "vampire") ||
          (squareContent.pieceType == "vampire" && pieceType == "ghost") ||
          (squareContent.pieceType == "ghost" && pieceType == "werewolf")){
 
         alert(`${pieceType} x ${squareContent.pieceType}: ${squareContent.pieceType} dead!`);
-        // alert("Werewolf x vampire: werewolf dead!");
+
+        //Remove the losers from the square
         destinationSquare.removeChild(children[0]);
+
         players[squareContent.pieceColor]["monsters"]--;
         players[squareContent.pieceColor][squareContent.pieceType]--;
       }
+      //The attacked player won
       else{
         alert(`${pieceType} x ${squareContent.pieceType}: ${pieceType} dead!`);
         destinationSquare.removeChild(children[1]);
@@ -314,12 +412,8 @@ function drop(ev) {
         players[pieceColor][pieceType]--;
         whoLived = 1;
       }
-
     }
-
   }
-
-  // destinationSquare.appendChild(piece);
 
   updateBoardSquaresArray(
     startingSquareId,
@@ -328,17 +422,22 @@ function drop(ev) {
     whoLived
   );
 
+  //Updtaes the info displayed on the page
   updateGame();
   return;
 }
 
+//Process to verify the possible movement of the selected piece
 function getPossibleMoves(startingSquareId, piece, boardSquaresArray) {
+
   let horiVert = getHoriVertMoves(startingSquareId, piece.pieceColor, boardSquaresArray);
+
   let diagonal = getDiagonalMoves(startingSquareId, piece.pieceColor, boardSquaresArray);
   let legalSquares = [...horiVert, ...diagonal];
   return legalSquares;
 }
 
+//Horizontal and vertical movements
 function getHoriVertMoves(startingSquareId, pieceColor, boardSquaresArray) {
   let vetMoveAllUp = moveAllUp(
     startingSquareId,
@@ -369,6 +468,7 @@ function getHoriVertMoves(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Diagonal movement
 function getDiagonalMoves(startingSquareId, pieceColor, boardSquaresArray) {
   let vetMoveToDirNE = moveToDirNE(
     startingSquareId,
@@ -399,6 +499,7 @@ function getDiagonalMoves(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Check all the possibilities in the vertical above
 function moveAllUp(startingSquareId, pieceColor, boardSquaresArray) {
   const file = startingSquareId.charAt(0);
   const rank = startingSquareId.substring(1);
@@ -424,6 +525,7 @@ function moveAllUp(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Check all the possibilities in the vertical below
 function moveAllDown(startingSquareId, pieceColor, boardSquaresArray) {
   const file = startingSquareId.charAt(0);
   const rank = startingSquareId.substring(1);
@@ -448,6 +550,7 @@ function moveAllDown(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Check all the possibilities in the horizontal left
 function moveAllLeft(startingSquareId, pieceColor, boardSquaresArray) {
   const file = startingSquareId.charAt(0);
   const rank = startingSquareId.substring(1);
@@ -472,6 +575,7 @@ function moveAllLeft(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Check all the possibilities in the horizontal right
 function moveAllRight(startingSquareId, pieceColor, boardSquaresArray) {
   const file = startingSquareId.charAt(0);
   const rank = startingSquareId.substring(1);
@@ -498,6 +602,7 @@ function moveAllRight(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Check all possibilities in the upper left diagonal
 function moveToDirNW(
   startingSquareId,
   pieceColor,
@@ -532,6 +637,8 @@ function moveToDirNW(
   }
   return legalSquares;
 }
+
+//Check all possibilities in the upper right diagonal
 function moveToDirNE(
   startingSquareId,
   pieceColor,
@@ -566,6 +673,8 @@ function moveToDirNE(
   }
   return legalSquares;
 }
+
+//Check all possibilities in the lower left diagonal
 function moveToDirSW(startingSquareId, pieceColor, boardSquaresArray) {
   const file = startingSquareId.charAt(0);
   const rank = startingSquareId.substring(1);
@@ -596,6 +705,8 @@ function moveToDirSW(startingSquareId, pieceColor, boardSquaresArray) {
   }
   return legalSquares;
 }
+
+//Check all possibilities in the lower right diagonal
 function moveToDirSE(startingSquareId, pieceColor, boardSquaresArray) {
   const file = startingSquareId.charAt(0);
   const rank = startingSquareId.substring(1);
@@ -627,6 +738,7 @@ function moveToDirSE(startingSquareId, pieceColor, boardSquaresArray) {
   return legalSquares;
 }
 
+//Verify if on the destination square is a piece
 function getPieceAtSquare(squareId, boardSquaresArray) {
   let currentSquare = boardSquaresArray.find(
     (element) => element.squareId === squareId
@@ -637,9 +749,10 @@ function getPieceAtSquare(squareId, boardSquaresArray) {
   return { pieceColor: color, pieceType: pieceType,pieceId:pieceId};
 }
 
+//Converts numbers to their text correspondents
 function numToText(i) {
   switch(i){
-      case 0:   return  "red";
+      case 0:   return "red";
       case 1:   return "yellow";
       case 2:   return "green";
       case 3:   return "blue";
