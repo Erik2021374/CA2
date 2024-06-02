@@ -333,7 +333,7 @@ function drag(ev) {
 
 }
 
-//Função que define o que acontece quando olta a peça em determinado local
+//Function that defines what happens when you release the monster in a specific place
 function drop(ev) {
   ev.preventDefault();
 
